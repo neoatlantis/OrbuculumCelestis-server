@@ -41,7 +41,7 @@ def strttime(dt):
         tt = dt.tuple()
     else:
         raise Exception("Object cannot be converted to ISO datetime string.")
-    return "%04d-%02d-%02dT%02d:%02d:%02d" % tt 
+    return "%04d-%02d-%02dT%02d:%02d:%02dZ" % tt 
 
 #------------------------------------------------------------------------------
 
