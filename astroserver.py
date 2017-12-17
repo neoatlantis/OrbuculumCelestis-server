@@ -19,43 +19,53 @@ def checkInput(lat, lng):
     return True
 
 def strttime(dt):
-    return "%d/%d/%d %d:%d:%d" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-
-def datetimeToISOString(dt):
-    return "%04d-%02d-%02dT%02d:%02d:%02dZ" % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+    if isinstance(dt, pydt.datetime):
+        tt = dt.utctimetuple()
+    elif isinstance(dt, ephem.Date):
+        tt = dt.tuple()
+    else:
+        raise Exception("Object cannot be converted to ISO datetime string.")
+    print(tt)
+    return "%04d-%02d-%02dT%02d:%02d:%02dZ" % tt 
 
 #------------------------------------------------------------------------------
 
 def _calcRisingSetting(observer, target):
     try:
-        nextRising = observer.next_rising(target)
+        nextRising = strttime(observer.next_rising(target))
     except:
         nextRising = None
     try:
-        nextSetting = observer.next_setting(target)
+        nextSetting = strttime(observer.next_setting(target))
     except:
         nextSetting = None
 
-    return (
-        datetimeToISOString(ephem.localtime(nextRising)),
-        datetimeToISOString(ephem.localtime(nextSetting))
-    )
+    return (nextRising, nextSetting)
 
 
 def astro(lat, lng):
-    ret = {}
+    retObserver, retHeaven = {}, {} 
 
     # ---- Set up observer
     observer = ephem.Observer()
     observer.lat, observer.lon = str(lat), str(lng)
     observer.date = pydt.datetime.utcnow()
+    retObserver = {
+        "lat": lat,
+        "lng": lng,
+        "datetime": strttime(observer.date),
+    }
+
 
     # ---- calculations for the sun
-    ret["sun"] = {}
-    ret["sun"]["rising"], ret["sun"]["setting"] = \
+    retHeaven["sun"] = {}
+    retHeaven["sun"]["rising"], retHeaven["sun"]["setting"] = \
         _calcRisingSetting(observer, ephem.Sun())
 
-    return ret
+    return {
+        "observer": retObserver,
+        "heaven": retHeaven,
+    }
 
 ###############################################################################
 
