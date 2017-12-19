@@ -16,23 +16,18 @@ come earlier than the other. In daytime the sunset time is the time for that
 day, and the sunrise time comes after that.
 """
 
+import sys
 import json
+import yaml
 import datetime as pydt
 
 from bottle import *
 import ephem
 
-###############################################################################
+from _timezone import googleTimezone
+from _verifyLatLng import verifyLatLng
 
-def checkInput(lat, lng):
-    try:    
-        assert type(lat) == float
-        assert type(lng) == float
-        if lat > 90 or lat < -90: return False
-        if lng <= -180 or lng > 180: return False
-    except:
-        return False
-    return True
+###############################################################################
 
 def strttime(dt):
     if isinstance(dt, pydt.datetime):
@@ -73,7 +68,7 @@ def _calcTwilight(observer):
 
 
 
-def astro(lat, lng, pressureFix=None, temperatureFix=None):
+def astro(lat, lng, pressureFix=None, temperatureFix=None, timezoneInfo=None):
     retObserver, retHeaven = {}, {} 
 
     # ---- Set up observer
@@ -92,7 +87,7 @@ def astro(lat, lng, pressureFix=None, temperatureFix=None):
     if temperatureFix:
         retObserver["temperature"] = temperatureFix
         observer.temp = temperatureFix - 273.15
-
+    retObserver["timezone"] = timezoneInfo
 
     # ---- calculations for a few celestial bodies
     bodies = {"sun": ephem.Sun, "moon": ephem.Moon}
@@ -108,9 +103,19 @@ def astro(lat, lng, pressureFix=None, temperatureFix=None):
 
 ###############################################################################
 
+# ---- Read config file
+GOOGLE_TIMEZONE_TOKEN = None 
+try:
+    config = yaml.load(open(sys.argv[1], 'r').read())
+    GOOGLE_TIMEZONE_TOKEN = config["google-timezone-api"]
+except Exception(e):
+    print("Warning: Cannot load google timezone api. Set up config.yaml properly.")
+
+
+
 @route("/<lat:float>/<lng:float>/<filetype:re:(json|html){0,1}>")
 def query(lat, lng, filetype):
-    if not checkInput(lat, lng):
+    if not verifyLatLng(lat, lng):
         return abort(400, "Latitude and/or longitude invalid.")
     params = request.query
     try:
@@ -123,11 +128,15 @@ def query(lat, lng, filetype):
         assert temperatureFix > 150 and temperatureFix < 373
     except:
         temperatureFix = None
+
+    timezoneInfo = googleTimezone(GOOGLE_TIMEZONE_TOKEN, lat, lng)
+
     data = astro(\
         lat,
         lng,
         temperatureFix=temperatureFix,
-        pressureFix=pressureFix
+        pressureFix=pressureFix,
+        timezoneInfo=timezoneInfo,
     )
     return json.dumps(data)
 run(host="127.0.0.1", port=7778)

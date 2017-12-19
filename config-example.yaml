@@ -1,0 +1,15 @@
+# This is the configuration file example of Orbuculum Celesti.
+# You have to open this file using a proper editor, which will display the file
+# in multiple lines(not something like Windows notepad!). After that, edit
+# each line according to instructions.
+
+
+# Google API for querying timezones.
+# 
+# To get a API key, visit:
+#   https://developers.google.com/maps/documentation/timezone/get-api-key
+# and paste them here.
+#
+# Example:
+# google-time-zone-api: GOOGLEAPIGOESHERE
+google-timezone-api:

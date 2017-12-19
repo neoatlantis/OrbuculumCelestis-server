@@ -1,2 +1,4 @@
 pyephem
 bottle
+requests
+pyyaml
