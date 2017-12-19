@@ -6,7 +6,7 @@ import requests
 def googleTimezone(token, lat, lng, timeout=30):
     try:
         assert type(token) == str and token != ''
-        latlngStr = "%.3f,%.3f" % (lat, lng)
+        latlngStr = "%.5f,%.5f" % (lat, lng)
         timestamp = int(datetime.datetime.utcnow().timestamp())
         url = "https://maps.googleapis.com/maps/api/timezone/json?"
         url += "location=%s&timestamp=%d&key=%s" % (latlngStr, timestamp, token)
